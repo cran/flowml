@@ -2,7 +2,7 @@ Package: flowml
 Type: Package
 Title: A Backend for a 'nextflow' Pipeline that Performs
         Machine-Learning-Based Modeling of Biomedical Data
-Version: 0.1.2
+Version: 0.1.3
 Authors@R: c(
     person("Sebastian", "Malkusch",
       email = "sebastian.malkusch@boehringer-ingelheim.com",
@@ -59,20 +59,20 @@ Collate: 'fml_resampler.R' 'fml_resample.R' 'fml_format_response.R'
         'fml_train.R' 'fml_validate.R'
 Suggests: ada, adabag, arm, bartMachine, bst, C50, caTools, class,
         Cubist, e1071, earth, elasticnet, evtree, fastICA, foreach,
-        frbs, gam, gbm, ggplot2, glmnet, gpls, h2o, hda, ipred, keras,
+        frbs, gam, gbm, ggplot2, glmnet, h2o, hda, ipred, keras,
         kernlab, kknn, klaR, knitr, kohonen, lars, leaps, LiblineaR,
         LogicReg, MASS, Matrix, mboost, mda, mgcv, monomvn, neuralnet,
-        nnet, nnls, pamr, partDSA, party, partykit, penalized,
-        penalizedLDA, pls, plyr, proxy, quantregForest, randomForest,
-        ranger, rFerns, rmarkdown, rpart, rrcov, rrcovHD, RSNNS, RWeka,
-        sda, shapviz, spls, superpc, vbmp, VGAM, xgboost
+        nnet, nnls, pamr, partDSA, party, partykit, penalized, pls,
+        plyr, proxy, quantregForest, randomForest, ranger, rFerns,
+        rmarkdown, rpart, rrcov, rrcovHD, RSNNS, RWeka, sda, shapviz,
+        spls, superpc, VGAM, xgboost
 Depends: R (>= 3.5.0)
 NeedsCompilation: no
-Packaged: 2023-10-06 15:44:14 UTC; malkusch
+Packaged: 2024-02-16 08:55:02 UTC; malkusch
 Author: Sebastian Malkusch [aut, cre] (<https://orcid.org/0000-0001-6766-140X>),
   Kolja Becker [aut] (<https://orcid.org/0000-0001-8282-5329>),
   Alexander Peltzer [ctb] (<https://orcid.org/0000-0002-6503-2180>),
   Neslihan Kaya [ctb] (<https://orcid.org/0000-0002-0213-3072>),
   Boehringer Ingelheim Ltd. [cph, fnd]
 Repository: CRAN
-Date/Publication: 2023-10-09 12:50:08 UTC
+Date/Publication: 2024-02-16 10:40:02 UTC

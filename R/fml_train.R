@@ -55,10 +55,6 @@ fml_train = function(parser_inst){
     stop(sprintf("fit.id is empty\n"))
   }
 
-  # output
-  file.rds = sprintf("%s/%s.rds", parser_inst$result_dir, config_inst$fit.id)
-  file.log = sprintf("%s/%s.log", parser_inst$result_dir, config_inst$fit.id)
-
   # data
   # NOTE: using fread because it's faster
   df.data = data.table::fread(file.data) %>%
@@ -72,6 +68,7 @@ fml_train = function(parser_inst){
 
   # set up trainControl
   # TODO: implement other methods such as jackknife, bootstrap, ...
+  # TODO: does trControl support balanced splitting?
   trControl = caret::trainControl(
     method = config_inst$ml.cv$method,
     number = as.numeric(config_inst$ml.cv$fold),
@@ -79,23 +76,51 @@ fml_train = function(parser_inst){
 
   # train model
   set.seed(as.numeric(config_inst$ml.seed))
-  cv_model = caret::train(
-    y = format_y(df.data[list.samples, config_inst$ml.response], config_inst$ml.type),
-    x = df.data[list.samples, list.features, drop=FALSE],
-    method = config_inst$ml.method,
-    preProcess = config_inst$ml.preprocess,
-    trControl = trControl,
-    tuneGrid = list.grids[[config_inst$ml.cv$tune.grid]], # NOTE: if NULL tuneLength is used
-    tuneLength = as.numeric(config_inst$ml.cv$tune.length)
-  )
+
+  if (config_inst$ml.interpret$caret.native.importance != FALSE){
+    cv_model = caret::train(
+      y = format_y(df.data[list.samples, config_inst$ml.response], config_inst$ml.type),
+      x = df.data[list.samples, list.features, drop=FALSE],
+      method = config_inst$ml.method,
+      preProcess = config_inst$ml.preprocess,
+      trControl = trControl,
+      tuneGrid = list.grids[[config_inst$ml.cv$tune.grid]], # NOTE: if NULL tuneLength is used
+      tuneLength = as.numeric(config_inst$ml.cv$tune.length),
+      importance = config_inst$ml.interpret$caret.native.importance, # NOTE: values depend on the respective model
+      verbosity = 0
+      )
+  } else {
+    cv_model = caret::train(
+      y = format_y(df.data[list.samples, config_inst$ml.response], config_inst$ml.type),
+      x = df.data[list.samples, list.features, drop=FALSE],
+      method = config_inst$ml.method,
+      preProcess = config_inst$ml.preprocess,
+      trControl = trControl,
+      tuneGrid = list.grids[[config_inst$ml.cv$tune.grid]], # NOTE: if NULL tuneLength is used
+      tuneLength = as.numeric(config_inst$ml.cv$tune.length),
+      verbosity = 0
+    )
+  }
 
   # ml run time
   ml.run_time =
     cv_model$times$everything['elapsed'] + cv_model$times$final['elapsed']
 
-  # save
+  ### save
+
+  # output files
+  file.rds = sprintf("%s/%s.rds", parser_inst$result_dir, config_inst$fit.id)
+  file.log = sprintf("%s/%s.log", parser_inst$result_dir, config_inst$fit.id)
+  file.res = sprintf("%s/%s_resample.txt", parser_inst$result_dir, config_inst$fit.id)
+  file.imp = sprintf("%s/%s_varimp.txt", parser_inst$result_dir, config_inst$fit.id)
+
+  # model object
   saveRDS(cv_model, file.rds)
 
+  # CV resampling table for best fit model
+  data.table::fwrite(cv_model$resample, file.res)
+
+  # log file
   list(
     name.out = config_inst$fit.id,
     file.data = file.data,
@@ -110,6 +135,7 @@ fml_train = function(parser_inst){
     ml.fold = config_inst$ml.cv$fold,
     ml.repeats = config_inst$ml.cv$repeats,
     ml.grid = config_inst$ml.cv$tune.grid,
+    ml.caret.native.importance = config_inst$ml.interpret$caret.native.importance,
     ml.run_time = ml.run_time,
     note.log = config_inst$note
   ) %>%

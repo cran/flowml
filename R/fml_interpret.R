@@ -83,10 +83,19 @@ fml_interpret = function(parser_inst){
   fml_metric <- switch(fml_mode,
                       "regression" = "rmse",
                       "classification" = "accuracy")
+  fml_reference_class <- config_inst$ml.interpret$shap.reference.class
   fml_seed <- as.integer(config_inst$ml.seed)
 
   # run interpretation experiment.
   set.seed(fml_seed)
+
+  pred_shap <- function(model, newdata) {
+    switch(fml_mode,
+           "classification" = {predict(model, newdata = newdata, type = "prob")[[fml_reference_class]]},
+           "regression" = {predict(model, newdata = newdata)}
+    )
+  }
+
   interpret_inst <- switch (parser_inst$interpretation,
                             "permutation" = {
                               vip::vi_permute(object = model_inst,
@@ -103,14 +112,18 @@ fml_interpret = function(parser_inst){
                             "shap" = {
                               fastshap::explain(object = model_inst,
                                                 feature_names = train_features_lst,
-                                                pred_wrapper = predict,
+                                                pred_wrapper = pred_shap,
                                                 nsim = fml_resamples,
                                                 X = as.data.frame(dplyr::select(filtered_df, dplyr::all_of(train_features_lst))),
                                                 newdata = NULL,
                                                 adjust = TRUE) %>%
                                 return()
                             },
-                            stop(sprintf("Interpretation method %s is unknown. Needs to be permutation or shap.", parser_inst$interpretation))
+                            "internal" = {
+                              vip::vi_model(object = model_inst) %>%
+                                return()
+                            },
+                            stop(sprintf("Interpretation method %s is unknown. Needs to be permutation shap or internal.", parser_inst$interpretation))
   )
 
   # perform item categorization
